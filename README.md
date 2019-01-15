@@ -1,5 +1,7 @@
 # api.semux.online proxy server
 
+This is the original Semux API without the node's wallet direct operations and with no authorization and authentication.
+
 ## Install
 
 ### Prerequisites
