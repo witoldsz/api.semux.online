@@ -20,27 +20,30 @@ const proxyMiddleware = (req, res, next) => {
   }
 }
 
-const apiProxy = {
-  '/v2.1.0': {
-    '/info': ['get'],
-    '/account': ['get'],
-    '/account/transactions': ['get'],
-    '/account/pending-transactions': ['get'],
-    '/account/votes': ['get'],
-    '/delegates': ['get'],
-    '/latest-block': ['get'],
-    '/transaction/raw': ['post', 'options'],
-  },
-  '/v2.2.0': {
-    '/info': ['get'],
-    '/account': ['get'],
-    '/account/transactions': ['get'],
-    '/account/pending-transactions': ['get'],
-    '/account/votes': ['get'],
-    '/delegates': ['get'],
-    '/latest-block': ['get'],
-    '/transaction/raw': ['post', 'options'],
-  },
+const apiProxy = { }
+apiProxy['/v2.1.0'] = {
+  '/info': ['get'],
+  '/account': ['get'],
+  '/account/transactions': ['get'],
+  '/account/pending-transactions': ['get'],
+  '/account/votes': ['get'],
+  '/block-by-hash': ['get'],
+  '/block-by-number': ['get'],
+  '/delegates': ['get'],
+  '/latest-block': ['get'],
+  '/latest-block-number': ['get'],
+  '/pending-transactions': ['get'],
+  '/transaction': ['get'],
+  '/transaction-limits': ['get'],
+  '/validators': ['get'],
+  '/vote': ['get'],
+  '/votes': ['get'],
+  '/transaction/raw': ['post'],
+  '/compose-raw-transaction': ['get'],
+  '/syncing': ['get'],
+}
+apiProxy['/v2.2.0'] = {
+  ...apiProxy['/v2.1.0'],
 }
 
 app.get('/', proxyMiddleware)
@@ -51,7 +54,8 @@ Object.entries(apiProxy).forEach(([version, paths]) => {
   app.get(version, proxyMiddleware)
   app.get(`/swagger${version}.json`, modifySwaggerJsonMiddleware(version))
   Object.entries(paths).forEach(([path, methods]) => {
-    methods.forEach((method) => {
+    const withOptions = m => m.includes('post') ? [...m, 'options'] : m
+    withOptions(methods).forEach((method) => {
       app[method](version + path, proxyMiddleware)
     })
   })
@@ -88,8 +92,10 @@ function modifySwaggerJson(version, orig) {
     R.map(R.map(R.dissoc('security'))),
   )(orig.paths)
 
+  const extraDescription = '**Semux Online API** project: https://github.com/witoldsz/api.semux.online'
   return R.pipe(
     R.assocPath(['info', 'title'], 'Semux Online API'),
+    R.over(R.lensPath(['info', 'description']), d => `${d}\n\n${extraDescription}`),
     R.assoc('paths', paths),
     R.dissoc('security'),
     R.dissoc('securityDefinitions'),
