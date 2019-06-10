@@ -9,7 +9,7 @@ const app = express()
 const proxy = httpProxy.createProxy({
   target: env('SEMUX_API_ADDR'),
   auth: `${env('SEMUX_API_USER')}:${env('SEMUX_API_PASS')}`,
-  proxyTimeout: 5000,
+  proxyTimeout: 15000,
 })
 
 const proxyMiddleware = (req, res, next) => {
