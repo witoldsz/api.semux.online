@@ -44,6 +44,7 @@ apiProxy['/v2.1.0'] = {
 }
 apiProxy['/v2.2.0'] = {
   ...apiProxy['/v2.1.0'],
+  '/transaction-result': ['get'],
 }
 
 app.get('/', proxyMiddleware)
