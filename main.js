@@ -1,7 +1,7 @@
 const express = require('express')
 const httpProxy = require('http-proxy')
 const R = require('ramda')
-const request = require('request-promise-native')
+const request = require('request')
 const url = require('url')
 
 const app = express()
@@ -80,9 +80,11 @@ const server = app.listen(
 function modifySwaggerJsonMiddleware(version) {
   return (req, res, next) => {
     const auth = { user: env('SEMUX_API_USER'), pass: env('SEMUX_API_PASS') }
-    request.get(url.resolve(env('SEMUX_API_ADDR'), req.originalUrl), { auth, json: true })
-      .then((orig) => res.json(modifySwaggerJson(version, orig)))
-      .catch(next)
+    const callback = (err, _, orig) => {
+      if (err) next(err)
+      else res.json(modifySwaggerJson(version, orig))
+    }
+    request.get(url.resolve(env('SEMUX_API_ADDR'), req.originalUrl), { auth, json: true }, callback)
   }
 }
 
